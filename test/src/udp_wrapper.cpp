@@ -56,15 +56,25 @@ SOCKET udpsock_client(void)
 }
 
 // function should return sender address info (for the code the server)
-std::string recvudp(SOCKET sock, const int size, std::string & addr)
+int udpsock_recvstr(SOCKET sock, std::string & addr, const int maxsize, std::string & message)
 {
-        // TODO: use std::vector<char> here instead of char array
+    char * data = new char[maxsize];
+    int retsize = udpsock_recvdata(sock, addr, maxsize, (unsigned char *)data);
+    data[retsize] = '\0';
+    message = std::string(data);
+    delete[] data;
+    return retsize;
+}
+
+// function should return sender address info (for the code the server)
+int udpsock_recvdata(SOCKET sock, std::string & addr, const int maxsize, unsigned char * data)
+{
+    // TODO: use std::vector<char> here instead of char array
     char* buf = 0;
-    buf = new char[size];
     sockaddr_in SenderAddr;
     socklen_t recvaddrlen = sizeof(SenderAddr);
 
-    int retsize = recvfrom(sock, buf, size, 0, (sockaddr*) &SenderAddr, &recvaddrlen);
+    int retsize = recvfrom(sock, data, maxsize, 0, (sockaddr*) &SenderAddr, &recvaddrlen);
 
     if(retsize == -1)
     {
@@ -78,28 +88,11 @@ std::string recvudp(SOCKET sock, const int size, std::string & addr)
 #else
         std::cout << "\nRecv Error\n";
 #endif
-
-        return "\0";
-    }
-    else if (retsize < size)
-    {
-        buf[retsize] = '\0';
+        retsize = 0;
     }
     addr = std::string(inet_ntoa(SenderAddr.sin_addr));
-    std::string str(buf);
-    delete[] buf;
 
-    return str;
-}
-
-// std::string recvudp(const char * addr, int port, SOCKET sock, const int size)
-// {
-//   return recvudp(sock, size, make_sockaddr(addr, port));
-// }
-
-int sendudp(std::string message, const char * addr, int port, SOCKET sock)
-{
-    return sendudp(message, make_sockaddr(addr, port), sock);
+    return retsize;
 }
 
 // On the client side, prepare dest like this:
@@ -107,9 +100,10 @@ int sendudp(std::string message, const char * addr, int port, SOCKET sock)
 //  dest.sin_family = AF_INET;
 //  dest.sin_addr.s_addr = inet_addr(ip.c_str());
 //  dest.sin_port = htons(port);
-int sendudp(std::string message, sockaddr_in dest,SOCKET sock)
+int udpsock_sendstr(SOCKET sock, const char * addr, int port, std::string message)
 {
-    int ret = sendto(sock,message.c_str(),message.size(),0, (sockaddr*)&dest,sizeof(dest));
+    sockaddr_in dest = make_sockaddr(addr, port);
+    int ret = sendto(sock,message.c_str(), message.size(), 0, (sockaddr*)&dest, sizeof(dest));
 
     if (ret == -1)
     {
@@ -119,7 +113,6 @@ int sendudp(std::string message, sockaddr_in dest,SOCKET sock)
         std::cout << "\nSend Error Code\n";
 #endif
     }
-
     return ret;
 }
 

@@ -30,10 +30,11 @@ int main(int argc, char ** argv)
 // 	printf("input image, %d, %d\n", inputimage.cols, inputimage.rows);
 //         cv::imshow("Input Image", inputimage);
 //         if (check_break()) break;
-      std::string sender_addr;
-      printf("receiving...\n");
-      std::string message = recvudp(sock, 2048, sender_addr);
-      printf("message:%s (%s)\n", message.c_str(), sender_addr.c_str());
+        std::string sender_addr;
+        printf("receiving...\n");
+        std::string message;
+        udpsock_recvstr(sock, sender_addr, 2048, message);
+        printf("message:%s (%s)\n", message.c_str(), sender_addr.c_str());
     }
 
     deinit_udpsock(sock);

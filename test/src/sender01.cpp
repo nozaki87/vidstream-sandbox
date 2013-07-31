@@ -34,12 +34,12 @@ int main(int argc, char ** argv)
     int i = 0;
     while (1) {
         VC.read(inputimage);
-	printf("input image, %d, %d\n", inputimage.cols, inputimage.rows);
+    	printf("input image, %d, %d\n", inputimage.cols, inputimage.rows);
         cv::imshow("Input Image", inputimage);
-	char message[256];
-	sprintf(message, "sender %d", i); // syntax is "commandnumber, totalnumber, x, y, z, x, y, z, ..."
-	sendudp(message, "127.0.0.1", 45678, sock);
-	i++;
+        char message[256];
+        sprintf(message, "sender %d", i); // syntax is "commandnumber, totalnumber, x, y, z, x, y, z, ..."
+        udpsock_sendstr(sock, "127.0.0.1", 45678, message);
+        i++;
         if (check_break()) break;
     }
 

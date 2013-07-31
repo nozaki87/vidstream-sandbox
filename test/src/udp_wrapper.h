@@ -19,10 +19,10 @@ typedef int SOCKET;
 
 extern SOCKET udpsock_server(int port, const char* addr);
 extern SOCKET udpsock_client(void);
-extern std::string recvudp(SOCKET sock, const int size, std::string & addr);
-extern std::string recvudp(const char * addr, int port, SOCKET sock, const int size);
-extern int sendudp(std::string message, const char * addr, int port, SOCKET sock);
-extern int sendudp(std::string message, sockaddr_in RecvAddr, SOCKET sock);
+extern int udpsock_recvstr(SOCKET sock, std::string & addr, const int maxsize, std::string & message);
+extern int udpsock_recvdata(SOCKET sock, std::string & addr, const int maxsize, unsigned char * data);
+extern int udpsock_sendstr(SOCKET sock, const char * addr, int port, std::string message);
+extern int udpsock_senddata(SOCKET sock, const char * addr, int port, std::string message);
 extern sockaddr_in make_sockaddr(const char * addr, int port);
 extern void deinit_udpsock(SOCKET sock);
 

@@ -21,12 +21,12 @@
 //            	"-I/usr/include",
 //        		"-I/usr/local/include",
         	"-I/usr/include/x86_64-linux-gnu/c++/4.7/",
-            "-I${folder:${project_path:astm.sublime-project}}/../library/**",
-            "-I${folder:${project_path:astm.sublime-project}}/../test/**"
+            "-I${folder:${project_path:vstest.sublime-project}}/../library/**",
+            "-I${folder:${project_path:vstest.sublime-project}}/../test/**"
     	]
     	,
     	"sublimegdb_workingdir": "../build/",
-    	"sublimegdb_commandline": "gdb --interpreter=mi ${folder:${project_path:astm.sublime-project}}/../build/test/astm_sample02",
+    	"sublimegdb_commandline": "gdb --interpreter=mi ${folder:${project_path:vstest.sublime-project}}/../build/test/astm_sample02",
     	"sublimegdb_exec_cmd": 
     	[
         	//"-exec-arguments /mnt/hgfs/Nau/sync/database/SLAM/test0010/image.list",
