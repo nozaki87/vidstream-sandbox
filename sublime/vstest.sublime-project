@@ -1,0 +1,37 @@
+{
+	"folders":
+	[
+        {
+            "path": "../sublime"
+        }
+        ,
+        {
+            "path": "../library/"
+        }
+        ,
+        {
+            "path": "../test/"
+        }
+	]
+	,
+	"settings":
+	{
+		"sublimeclang_options":
+    	[
+//            	"-I/usr/include",
+//        		"-I/usr/local/include",
+        	"-I/usr/include/x86_64-linux-gnu/c++/4.7/",
+            "-I${folder:${project_path:astm.sublime-project}}/../library/**",
+            "-I${folder:${project_path:astm.sublime-project}}/../test/**"
+    	]
+    	,
+    	"sublimegdb_workingdir": "../build/",
+    	"sublimegdb_commandline": "gdb --interpreter=mi ${folder:${project_path:astm.sublime-project}}/../build/test/astm_sample02",
+    	"sublimegdb_exec_cmd": 
+    	[
+        	//"-exec-arguments /mnt/hgfs/Nau/sync/database/SLAM/test0010/image.list",
+        	"-exec-arguments /mnt/hgfs/Nau/sync/database/SLAM/hania-harbour-panorama8large.jpg",
+        	"-exec-run"
+		]
+	}
+}

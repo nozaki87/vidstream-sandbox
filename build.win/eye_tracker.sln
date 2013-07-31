@@ -1,0 +1,63 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2012 for Windows Desktop
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "eye_tracker", "eye_tracker.vcxproj", "{7424E477-2A6B-52E5-5DB5-3AB5E6CFF022}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "eye_tracking_test01", "eye_tracker_test01.vcxproj", "{16811F84-785D-4497-BFCD-BE3B38C6116B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7424E477-2A6B-52E5-5DB5-3AB5E6CFF022} = {7424E477-2A6B-52E5-5DB5-3AB5E6CFF022}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "eye_tracking_test02", "eye_tracker_test02.vcxproj", "{CDAA1593-820D-4DFD-8685-F21905F57AD2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F991D011-52A5-A0D3-BAE0-1AC6ACF98490} = {F991D011-52A5-A0D3-BAE0-1AC6ACF98490}
+		{7424E477-2A6B-52E5-5DB5-3AB5E6CFF022} = {7424E477-2A6B-52E5-5DB5-3AB5E6CFF022}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "calibrator", "calibrator.vcxproj", "{F991D011-52A5-A0D3-BAE0-1AC6ACF98490}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "eye_tracking_calib", "eye_tracker_calib.vcxproj", "{96F6DB8E-0A80-48C0-984D-EB679D5F8F1D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F991D011-52A5-A0D3-BAE0-1AC6ACF98490} = {F991D011-52A5-A0D3-BAE0-1AC6ACF98490}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "face_tracking_test01", "face_tracker_test01.vcxproj", "{5A6FA0CC-C4B9-4E71-A23E-E77CB58FAF7B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7424E477-2A6B-52E5-5DB5-3AB5E6CFF022} = {7424E477-2A6B-52E5-5DB5-3AB5E6CFF022}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7424E477-2A6B-52E5-5DB5-3AB5E6CFF022}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7424E477-2A6B-52E5-5DB5-3AB5E6CFF022}.Debug|Win32.Build.0 = Debug|Win32
+		{7424E477-2A6B-52E5-5DB5-3AB5E6CFF022}.Release|Win32.ActiveCfg = Release|Win32
+		{7424E477-2A6B-52E5-5DB5-3AB5E6CFF022}.Release|Win32.Build.0 = Release|Win32
+		{16811F84-785D-4497-BFCD-BE3B38C6116B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{16811F84-785D-4497-BFCD-BE3B38C6116B}.Debug|Win32.Build.0 = Debug|Win32
+		{16811F84-785D-4497-BFCD-BE3B38C6116B}.Release|Win32.ActiveCfg = Release|Win32
+		{16811F84-785D-4497-BFCD-BE3B38C6116B}.Release|Win32.Build.0 = Release|Win32
+		{CDAA1593-820D-4DFD-8685-F21905F57AD2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CDAA1593-820D-4DFD-8685-F21905F57AD2}.Debug|Win32.Build.0 = Debug|Win32
+		{CDAA1593-820D-4DFD-8685-F21905F57AD2}.Release|Win32.ActiveCfg = Release|Win32
+		{CDAA1593-820D-4DFD-8685-F21905F57AD2}.Release|Win32.Build.0 = Release|Win32
+		{F991D011-52A5-A0D3-BAE0-1AC6ACF98490}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F991D011-52A5-A0D3-BAE0-1AC6ACF98490}.Debug|Win32.Build.0 = Debug|Win32
+		{F991D011-52A5-A0D3-BAE0-1AC6ACF98490}.Release|Win32.ActiveCfg = Release|Win32
+		{F991D011-52A5-A0D3-BAE0-1AC6ACF98490}.Release|Win32.Build.0 = Release|Win32
+		{96F6DB8E-0A80-48C0-984D-EB679D5F8F1D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{96F6DB8E-0A80-48C0-984D-EB679D5F8F1D}.Debug|Win32.Build.0 = Debug|Win32
+		{96F6DB8E-0A80-48C0-984D-EB679D5F8F1D}.Release|Win32.ActiveCfg = Release|Win32
+		{96F6DB8E-0A80-48C0-984D-EB679D5F8F1D}.Release|Win32.Build.0 = Release|Win32
+		{5A6FA0CC-C4B9-4E71-A23E-E77CB58FAF7B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5A6FA0CC-C4B9-4E71-A23E-E77CB58FAF7B}.Debug|Win32.Build.0 = Debug|Win32
+		{5A6FA0CC-C4B9-4E71-A23E-E77CB58FAF7B}.Release|Win32.ActiveCfg = Release|Win32
+		{5A6FA0CC-C4B9-4E71-A23E-E77CB58FAF7B}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
