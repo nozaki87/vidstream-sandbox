@@ -22,7 +22,7 @@ extern SOCKET udpsock_client(void);
 extern int udpsock_recvstr(SOCKET sock, std::string & addr, const int maxsize, std::string & message);
 extern int udpsock_recvdata(SOCKET sock, std::string & addr, const int maxsize, unsigned char * data);
 extern int udpsock_sendstr(SOCKET sock, const char * addr, int port, std::string message);
-extern int udpsock_senddata(SOCKET sock, const char * addr, int port, std::string message);
+extern int udpsock_senddata(SOCKET sock, const char * addr, int port, unsigned char * data, int size);
 extern sockaddr_in make_sockaddr(const char * addr, int port);
 extern void deinit_udpsock(SOCKET sock);
 

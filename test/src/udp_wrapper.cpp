@@ -102,15 +102,20 @@ int udpsock_recvdata(SOCKET sock, std::string & addr, const int maxsize, unsigne
 //  dest.sin_port = htons(port);
 int udpsock_sendstr(SOCKET sock, const char * addr, int port, std::string message)
 {
+    return udpsock_senddata(sock, addr, port, (unsigned char *)message.c_str(), message.size());
+}
+
+int udpsock_senddata(SOCKET sock, const char * addr, int port, unsigned char * data, int size)
+{
     sockaddr_in dest = make_sockaddr(addr, port);
-    int ret = sendto(sock,message.c_str(), message.size(), 0, (sockaddr*)&dest, sizeof(dest));
+    int ret = sendto(sock, data, size, 0, (sockaddr*)&dest, sizeof(dest));
 
     if (ret == -1)
     {
 #if defined(WIN32)
         std::cout << "\nSend Error Code : " <<  WSAGetLastError();
 #else
-        std::cout << "\nSend Error Code\n";
+        std::cout << "\nSend Error\n";
 #endif
     }
     return ret;

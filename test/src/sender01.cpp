@@ -26,24 +26,30 @@ int main(int argc, char ** argv)
         deinit_udpsock(sock);
         return -1;
     }
-    VC.open(0);
-    VC.set(CV_CAP_PROP_FRAME_WIDTH, VIDEO_WIDTH);
-    VC.set(CV_CAP_PROP_FRAME_HEIGHT, VIDEO_HEIGHT);
-    VC.set(CV_CAP_PROP_FPS, 30);
+    // VC.open(0);
+    // VC.set(CV_CAP_PROP_FRAME_WIDTH, VIDEO_WIDTH);
+    // VC.set(CV_CAP_PROP_FRAME_HEIGHT, VIDEO_HEIGHT);
+    // VC.set(CV_CAP_PROP_FPS, 30);
 
     int i = 0;
     while (1) {
-        VC.read(inputimage);
-    	printf("input image, %d, %d\n", inputimage.cols, inputimage.rows);
-        cv::imshow("Input Image", inputimage);
+        // VC.read(inputimage);
+    	// printf("input image, %d, %d\n", inputimage.cols, inputimage.rows);
+        // cv::imshow("Input Image", inputimage);
         char message[256];
-        sprintf(message, "sender %d", i); // syntax is "commandnumber, totalnumber, x, y, z, x, y, z, ..."
+        if (i % 8 == 7) sprintf(message, "end.");
+        else sprintf(message, "send%03d-", i); // syntax is "commandnumber, totalnumber, x, y, z, x, y, z, ..."
+#if 0
+        printf("%ld\n", inputimage.step * inputimage.rows);
+        udpsock_senddata(sock, "127.0.0.1", 45678, inputimage.data, inputimage.step * inputimage.rows/*8192*/);
+#else
         udpsock_sendstr(sock, "127.0.0.1", 45678, message);
+#endif
         i++;
         if (check_break()) break;
     }
 
-    VC.release();
+    // VC.release();
 
     deinit_udpsock(sock);
 
