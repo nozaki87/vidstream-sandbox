@@ -7,10 +7,12 @@
 #include <map>
 #include "udp_wrapper.h"
 
-#define NDP_MAX_PACKET 8193
+#define NDP_MAX_PACKET 32
+#define NDP_HEADERSIZE 16
 
 class NDPPacket {
 public:
+	unsigned char * mHead;
 	unsigned char * mData;
 	int 			mSize;
 };
@@ -23,9 +25,20 @@ public:
 	int get_size();
 	void discard();
 	bool mIsCompleted;
+	int mFrameID;
 private:
+	int mPacketCount;
 	int mFrameSize;
 	std::vector<NDPPacket> mPackets;
+};
+
+class NDPStream {
+public:
+	void add_packet(unsigned char * data, int size);
+	NDPFrame pop_frame();
+	void discard_past_frame(int latest_id);
+private:
+	std::map<std::string, NDPFrame> mFrames;
 };
 
 class NDPServer {
@@ -38,12 +51,12 @@ public:
 
 private:
 	void setup();
-	void add_packet(std::string & from, unsigned char * data, int recvsize, int size);
+	void add_packet(std::string & from, unsigned char * data, int recvsize);
 	NDPFrame pop_frame();
 	SOCKET 		mSocket;
 	std::string mAddr;
 	int 		mPort;
-	std::map<std::string, NDPFrame> mFrames;
+	std::map<std::string, NDPStream> mStreams;
 };
 
 class NDPClient {
@@ -55,6 +68,7 @@ public:
 	void send_frame(std::string & to, unsigned char * data, int size);
 
 private:
+	int make_packet(unsigned char * packet, int cframe, int npacket, int cpacket, unsigned char * data, int size);
 	void setup();
 	SOCKET 		mSocket;
 	std::string mAddr;

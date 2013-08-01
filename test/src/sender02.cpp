@@ -23,7 +23,8 @@ int main(int argc, char ** argv)
 
     int port = 45678;
     ndpc.set_port(port);
-    std::string addr = std::string("128.32.33.48");
+    // std::string addr = std::string("128.32.33.48");
+    std::string addr = std::string("127.0.0.1");
     VC.open(0);
     VC.set(CV_CAP_PROP_FRAME_WIDTH, VIDEO_WIDTH);
     VC.set(CV_CAP_PROP_FRAME_HEIGHT, VIDEO_HEIGHT);
@@ -37,12 +38,11 @@ int main(int argc, char ** argv)
         cv::imshow("Input Image", inputimage);
         std::vector<uchar> buf;
         cv::imencode(".jpg", inputimage, buf);
-        printf("%ld\n", inputimage.step * inputimage.rows);
+        // printf("%ld\n", inputimage.step * inputimage.rows);
         ndpc.send_frame(addr, (unsigned char *)&buf[0], buf.size());
 #else
         char message[256];
-        if (i % 8 == 7) sprintf(message, "end.");
-        else sprintf(message, "%d-123456789This is Data.", i); // syntax is "commandnumber, totalnumber, x, y, z, x, y, z, ..."
+        sprintf(message, "%d-123456789ThisIsData.ThisIsData.0123456789Yeah!!!!", i); // syntax is "commandnumber, totalnumber, x, y, z, x, y, z, ..."
         std::string mes = std::string(message);
         ndpc.send_frame(addr, (unsigned char *)mes.c_str(), mes.size());
 #endif
