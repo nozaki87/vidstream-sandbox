@@ -151,8 +151,6 @@ void NDPClient::set_destination(std::string addr)
 	mAddr = addr;
 }
 
-#include <time.h>
-
 void NDPClient::send_frame(std::string & to, unsigned char * data, int size)
 {
 	unsigned char packet[NDP_MAX_PACKET];
@@ -163,7 +161,11 @@ void NDPClient::send_frame(std::string & to, unsigned char * data, int size)
 		udpsock_senddata(mSocket, to.c_str(), mPort, data, sendsize);
 		data += sendsize;
 		size -= sendsize;
+#if defined(WIN32)
+		Sleep(1);
+#else
 		usleep(1);
+#endif
 	}
 	mFrameCount++;
 	printf("\n");

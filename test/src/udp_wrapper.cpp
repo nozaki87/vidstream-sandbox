@@ -74,7 +74,7 @@ int udpsock_recvdata(SOCKET sock, std::string & addr, const int maxsize, unsigne
     sockaddr_in SenderAddr;
     socklen_t recvaddrlen = sizeof(SenderAddr);
 
-    int retsize = recvfrom(sock, data, maxsize, 0, (sockaddr*) &SenderAddr, &recvaddrlen);
+    int retsize = recvfrom(sock, (char *)data, maxsize, 0, (sockaddr*) &SenderAddr, &recvaddrlen);
 
     if(retsize == -1)
     {
@@ -83,7 +83,7 @@ int udpsock_recvdata(SOCKET sock, std::string & addr, const int maxsize, unsigne
 
         if (WSAGetLastError() == WSAEWOULDBLOCK || WSAGetLastError() == 0)
         {
-            return "";
+            retsize = 0;
         }
 #else
         std::cout << "\nRecv Error\n";
@@ -108,7 +108,7 @@ int udpsock_sendstr(SOCKET sock, const char * addr, int port, std::string messag
 int udpsock_senddata(SOCKET sock, const char * addr, int port, unsigned char * data, int size)
 {
     sockaddr_in dest = make_sockaddr(addr, port);
-    int ret = sendto(sock, data, size, 0, (sockaddr*)&dest, sizeof(dest));
+    int ret = sendto(sock, (char *)data, size, 0, (sockaddr*)&dest, sizeof(dest));
 
     if (ret == -1)
     {
