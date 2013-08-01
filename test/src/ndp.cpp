@@ -131,6 +131,7 @@ NDPClient::NDPClient()
 {
 	mSocket = udpsock_client();
 	mPort   = -1;
+	mFrameCount = 0;
 }
 
 NDPClient::~NDPClient()
@@ -154,6 +155,7 @@ void NDPClient::set_destination(std::string addr)
 
 void NDPClient::send_frame(std::string & to, unsigned char * data, int size)
 {
+	unsigned char packet[NDP_MAX_PACKET];
 	while (size > 0) {
 		int sendsize = size;
 		if (sendsize > NDP_MAX_PACKET) sendsize = NDP_MAX_PACKET;
@@ -163,6 +165,7 @@ void NDPClient::send_frame(std::string & to, unsigned char * data, int size)
 		size -= sendsize;
 		usleep(1);
 	}
+	mFrameCount++;
 	printf("\n");
 }
 

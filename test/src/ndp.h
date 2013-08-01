@@ -59,6 +59,7 @@ private:
 	SOCKET 		mSocket;
 	std::string mAddr;
 	int 		mPort;
+	int 		mFrameCount;
 };
 
 #endif // _NDP_H_
