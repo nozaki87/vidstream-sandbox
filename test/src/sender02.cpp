@@ -23,8 +23,8 @@ int main(int argc, char ** argv)
 
     int port = 45678;
     ndpc.set_port(port);
-    // std::string addr = std::string("128.32.33.48");
-    std::string addr = std::string("127.0.0.1");
+    std::string addr = std::string("128.32.33.48");
+    // std::string addr = std::string("127.0.0.1");
     VC.open(0);
     VC.set(CV_CAP_PROP_FRAME_WIDTH, VIDEO_WIDTH);
     VC.set(CV_CAP_PROP_FRAME_HEIGHT, VIDEO_HEIGHT);

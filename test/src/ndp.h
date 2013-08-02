@@ -7,7 +7,7 @@
 #include <map>
 #include "udp_wrapper.h"
 
-#define NDP_MAX_PACKET 32
+#define NDP_MAX_PACKET 512
 #define NDP_HEADERSIZE 16
 
 class NDPPacket {
@@ -34,6 +34,7 @@ private:
 
 class NDPStream {
 public:
+	~NDPStream();
 	void add_packet(unsigned char * data, int size);
 	NDPFrame pop_frame();
 	void discard_past_frame(int latest_id);

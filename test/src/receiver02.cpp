@@ -31,7 +31,6 @@ int main(int argc, char ** argv)
         int size = ndpframe.read_data(data, ndpframe.get_size());
         std::vector<uchar> buf(data, data + size);
         cv::Mat recvimg = cv::imdecode(buf, 1);
-//        cv::imshow("received image", image);
         cv::imshow("received image", recvimg);
         ndpframe.discard();
         if (check_break()) break;

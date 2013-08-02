@@ -62,6 +62,14 @@ void NDPFrame::discard()
 	mFrameSize = 0;
 }
 
+NDPStream::~NDPStream()
+{
+	for (std::map<std::string, NDPFrame>::iterator itr = mFrames.begin();
+		itr != mFrames.end(); ++itr) {
+		itr->second.discard();
+	}
+}
+
 void NDPStream::add_packet(unsigned char * data, int size)
 {
 	char tmp[64];
@@ -78,6 +86,7 @@ NDPFrame NDPStream::pop_frame()
 		itr != mFrames.end(); ++itr) {
 		if (itr->second.mIsCompleted) {
 			frame = itr->second;
+			discard_past_frame(frame.mFrameID);
 			mFrames.erase(itr);
 			break;
 		}
@@ -218,9 +227,9 @@ void NDPClient::send_frame(std::string & to, unsigned char * data, int size)
 		data += packet_size;
 		size -= packet_size;
 #if defined(WIN32)
-		Sleep(1);
+		// Sleep(1);
 #else
-		usleep(1);
+		// usleep(1);
 #endif
 		packet_count++;
 	}
