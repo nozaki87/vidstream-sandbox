@@ -1,4 +1,6 @@
 #include "ndp.h"
+#include "stdlib.h"
+#include "memory.h"
 
 NDPFrame::NDPFrame()
 {
