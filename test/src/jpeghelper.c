@@ -131,7 +131,7 @@ unsigned char  *load_jpg(char const *filename)
     return bmp;
 }
  
-unsigned char  *load_memory_jpg(char *memory, int size)
+unsigned char  *load_memory_jpg(unsigned char *memory, int size)
 {
     return load_jpg_helper(NULL, (void *)memory, size);
 }
@@ -166,16 +166,16 @@ unsigned char MJPGDHTSeg[0x1A4] =
     0xF9, 0xFA
 };
 
-void mjpeg2jpeg(unsigned char * dst, unsigned char * src, int srcsize)
+int mjpeg2jpeg(unsigned char * dst, const unsigned char * src, int srcsize)
 {
-    unsigned char * srcp = src;
+    const unsigned char * srcp = src;
     char has_dht;
     int skip;
-    if ((srcp[0] != 0xff) || (srcp[1] != 0xd8)) return;
+    if ((srcp[0] != 0xff) || (srcp[1] != 0xd8)) return 0;
     srcp += 2;
     has_dht = 0;
     while ((int)(srcp - src) >= srcsize) {
-        if (srcp[0] != 0xff) return;
+        if (srcp[0] != 0xff) return 0;
         if (srcp[1] == 0xc4) {
             has_dht = 1;
             break;
@@ -192,8 +192,10 @@ void mjpeg2jpeg(unsigned char * dst, unsigned char * src, int srcsize)
         memcpy(dst, MJPGDHTSeg, 0x1A4);
         dst += 0x1A4;
         memcpy(dst, srcp, srcsize - (int)(srcp - src));
+        return srcsize + 0x1A4;
     } else {
         memcpy(dst, src, srcsize);
+        return srcsize;
     }
 }
 

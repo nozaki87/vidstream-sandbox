@@ -32,6 +32,8 @@
 
 #define CLEAR(x) memset (&(x), 0, sizeof (x))
 
+#define USE_MJPEG
+
 /**********************************
  * Definitions
  **********************************/
@@ -50,39 +52,36 @@ struct V4L2W_HANDLER {
     char *           dev_name;
     io_method        io;
     int              fd;
-    struct buffer *   buffers;
+    struct buffer *  buffers;
     unsigned int     n_buffers;
     char             dev_name_tmp[512];
     unsigned char *  outimg;
-    int              outimg_format;
-    int              cap_width;
-    int              cap_height;
-    int              cap_fps;
+    // int              outimg_format;
+    // unsigned long    capture_format;
+    // int              cap_width;
+    // int              cap_height;
+    // int              cap_fps;
+    struct V4L2W_IMGPARAM imgparam;
 };
 
 /**********************************
  * Transformation of Image format
  **********************************/
-//#define USE_MJPEG
 #if defined(USE_MJPEG)
 #include <jpeghelper.h>
-static void trans_yuyv2bgr(const unsigned char * src, unsigned char * dst, int width, int height, int srcsize)
+static void trans_mjpeg2bgr(const unsigned char * src, unsigned char * dst, int width, int height, int srcsize)
 {
     unsigned char * bmp;
     unsigned char * jpegbuff;
     jpegbuff = malloc(srcsize + 0x1a4);
-    mjpeg2jpeg(jpegbuff, src, srcsize);
-    bmp = load_memory_jpg(jpegbuff, srcsize);
+    int newsrcsize = mjpeg2jpeg(jpegbuff, src, srcsize);
+    bmp = load_memory_jpg(jpegbuff, newsrcsize);
     memcpy(dst, bmp, width * height * 3);
     free(jpegbuff);
     free(bmp);
 }
+#endif // USE_MJPEG
 
-static void trans_yuyv2grey(const unsigned char * src, unsigned char * dst, int width, int height, int srcsize)
-{
-
-}
-#else
 static void trans_yuyv2bgr(const unsigned char * src, unsigned char * dst, int width, int height, int srcsize)
 {
     int y, x;
@@ -141,7 +140,6 @@ static void trans_yuyv2grey(const unsigned char * src, unsigned char * dst, int 
         }
     }
 }
-#endif
 
 /**********************************
  * V4L2 Control functions
@@ -171,18 +169,36 @@ xioctl                          (int                    fd,
 static void
 process_image                   (V4L2WHandler_t * handle, const void *           p, int size)
 {
-    switch (handle->outimg_format) {
+    switch (handle->imgparam.img_fmt) {
     case V4L2W_IMGFORMAT_GREY:
-        trans_yuyv2grey(p, handle->outimg, handle->cap_width, handle->cap_height, size);
+        switch (handle->imgparam.pix_fmt) {
+        case V4L2_PIX_FMT_YUYV:
+            trans_yuyv2grey(p, handle->outimg, handle->imgparam.width, handle->imgparam.height, size);
+            break;
+        case V4L2_PIX_FMT_MJPEG:
+        default:
+            fprintf(stderr, "Sorry this pix format and image format is not supported. (pix: %08x, img:%08x)\n", handle->imgparam.pix_fmt, handle->imgparam.img_fmt);
+            exit(0);
+        }
         break;
     case V4L2W_IMGFORMAT_BGR24:
-        trans_yuyv2bgr(p, handle->outimg, handle->cap_width, handle->cap_height, size);
+        switch (handle->imgparam.pix_fmt) {
+        case V4L2_PIX_FMT_YUYV:
+            trans_yuyv2bgr(p, handle->outimg, handle->imgparam.width, handle->imgparam.height, size);
+            break;
+        case V4L2_PIX_FMT_MJPEG:
+            trans_mjpeg2bgr(p, handle->outimg, handle->imgparam.width, handle->imgparam.height, size);
+            break;
+        default:
+            fprintf(stderr, "Sorry this pix format and image format is not supported. (pix: %08x, img:%08x)\n", handle->imgparam.pix_fmt, handle->imgparam.img_fmt);
+            exit(0);
+        }
         break;
     }
 }
 
 static int
-read_frame                      (V4L2WHandler_t * handle)
+read_stream (V4L2WHandler_t * handle, unsigned char * data, int size)
 {
         struct v4l2_buffer buf;
         unsigned int i;
@@ -203,8 +219,9 @@ read_frame                      (V4L2WHandler_t * handle)
                                 errno_exit ("read");
                         }
                 }
-
-                process_image (handle, handle->buffers[0].start, handle->buffers[0].length);
+                memcpy(data, handle->buffers[0].start, buf.bytesused);
+                size = buf.bytesused;
+                // process_image (handle, handle->buffers[0].start, handle->buffers[0].length);
 
                 break;
 
@@ -231,7 +248,11 @@ read_frame                      (V4L2WHandler_t * handle)
 
                 assert (buf.index < handle->n_buffers);
 
-                process_image (handle, handle->buffers[buf.index].start, handle->buffers[buf.index].length);
+                memcpy(data, handle->buffers[buf.index].start, buf.bytesused);
+                size = buf.bytesused;
+
+                // size = handle->buffers[buf.index].length;
+                // process_image (handle, handle->buffers[buf.index].start, handle->buffers[buf.index].length);
 
                 if (-1 == xioctl (handle->fd, VIDIOC_QBUF, &buf))
                         errno_exit ("VIDIOC_QBUF");
@@ -266,7 +287,106 @@ read_frame                      (V4L2WHandler_t * handle)
 
                 assert (i < handle->n_buffers);
 
-                process_image (handle, (void *) buf.m.userptr, buf.length);
+                memcpy(data, (void *) buf.m.userptr, buf.bytesused);
+                size = buf.bytesused;
+                // process_image (handle, (void *) buf.m.userptr, buf.length);
+
+                if (-1 == xioctl (handle->fd, VIDIOC_QBUF, &buf))
+                        errno_exit ("VIDIOC_QBUF");
+
+                break;
+        }
+
+        return size;
+}
+
+static int
+read_frame                      (V4L2WHandler_t * handle)
+{
+        struct v4l2_buffer buf;
+        unsigned int i;
+
+        switch (handle->io) {
+        case IO_METHOD_READ:
+                if (-1 == read (handle->fd, handle->buffers[0].start, handle->buffers[0].length)) {
+                        switch (errno) {
+                        case EAGAIN:
+                                return 0;
+
+                        case EIO:
+                                /* Could ignore EIO, see spec. */
+
+                                /* fall through */
+
+                        default:
+                                errno_exit ("read");
+                        }
+                }
+
+                process_image (handle, handle->buffers[0].start, buf.bytesused);
+
+                break;
+
+        case IO_METHOD_MMAP:
+                CLEAR (buf);
+
+                buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                buf.memory = V4L2_MEMORY_MMAP;
+
+                if (-1 == xioctl (handle->fd, VIDIOC_DQBUF, &buf)) {
+                        switch (errno) {
+                        case EAGAIN:
+                                return 0;
+
+                        case EIO:
+                                /* Could ignore EIO, see spec. */
+
+                                /* fall through */
+
+                        default:
+                                errno_exit ("VIDIOC_DQBUF");
+                        }
+                }
+
+                assert (buf.index < handle->n_buffers);
+
+                process_image (handle, handle->buffers[buf.index].start, buf.bytesused);
+                printf("%d\n", buf.bytesused);
+
+                if (-1 == xioctl (handle->fd, VIDIOC_QBUF, &buf))
+                        errno_exit ("VIDIOC_QBUF");
+
+                break;
+
+        case IO_METHOD_USERPTR:
+                CLEAR (buf);
+
+                buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                buf.memory = V4L2_MEMORY_USERPTR;
+
+                if (-1 == xioctl (handle->fd, VIDIOC_DQBUF, &buf)) {
+                        switch (errno) {
+                        case EAGAIN:
+                                return 0;
+
+                        case EIO:
+                                /* Could ignore EIO, see spec. */
+
+                                /* fall through */
+
+                        default:
+                                errno_exit ("VIDIOC_DQBUF");
+                        }
+                }
+
+                for (i = 0; i < handle->n_buffers; ++i)
+                        if (buf.m.userptr == (unsigned long) handle->buffers[i].start
+                            && buf.length == handle->buffers[i].length)
+                                break;
+
+                assert (i < handle->n_buffers);
+
+                process_image (handle, (void *) buf.m.userptr, buf.bytesused);
 
                 if (-1 == xioctl (handle->fd, VIDIOC_QBUF, &buf))
                         errno_exit ("VIDIOC_QBUF");
@@ -623,12 +743,9 @@ init_device                     (V4L2WHandler_t * handle)
         CLEAR (fmt);
 
         fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        fmt.fmt.pix.width       = handle->cap_width; 
-        fmt.fmt.pix.height      = handle->cap_height;
-        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-#if defined(USE_MJPEG)
-        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
-#endif
+        fmt.fmt.pix.width       = handle->imgparam.width; 
+        fmt.fmt.pix.height      = handle->imgparam.height;
+        fmt.fmt.pix.pixelformat = handle->imgparam.pix_fmt;
         fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;
 
         if (-1 == xioctl (handle->fd, VIDIOC_S_FMT, &fmt))
@@ -638,7 +755,7 @@ init_device                     (V4L2WHandler_t * handle)
 
         stream.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;        
         stream.parm.capture.timeperframe.numerator = 1;
-        stream.parm.capture.timeperframe.denominator = handle->cap_fps;
+        stream.parm.capture.timeperframe.denominator = handle->imgparam.fps;
         /* stream.parm.capture.timeperframe.numerator = 1; */
         /* stream.parm.capture.timeperframe.denominator = 10; */
         stream.parm.capture.readbuffers = 4;
@@ -671,6 +788,11 @@ init_device                     (V4L2WHandler_t * handle)
                 init_userp (handle, fmt.fmt.pix.sizeimage);
                 break;
         }
+
+        int ii;
+                for (ii = 0; ii < handle->n_buffers; ii++) {
+                    memset(handle->buffers[ii].start, 0, handle->buffers[ii].length);
+                }
 }
 
 void V4L2W_setctrl(V4L2WHandler_t * handle, int type, int value)
@@ -863,7 +985,7 @@ main                            (int                    argc,
 /**********************************
  * V4L2 Wrapper API
  **********************************/
-V4L2WHandler_t * V4L2W_initialize(const char * device_name0, int width, int height, int fps, int format)
+V4L2WHandler_t * V4L2W_init_w_param(const char * device_name0, struct V4L2W_IMGPARAM imgparam)
 {
     V4L2WHandler_t * handle;
     int outframesize;
@@ -872,34 +994,43 @@ V4L2WHandler_t * V4L2W_initialize(const char * device_name0, int width, int heig
     handle->dev_name        = NULL;
     handle->io              = IO_METHOD_MMAP;
     handle->fd              = -1;
-    handle->buffers        = NULL;
+    handle->buffers         = NULL;
     handle->n_buffers       = 0;
 
     /* Device name */
     strcpy(handle->dev_name_tmp, device_name0);
     handle->dev_name = handle->dev_name_tmp;
     /* Device initialization */
-    handle->cap_width = width;
-    handle->cap_height = height;
-    handle->cap_fps = fps;
-    handle->outimg_format = format;
+    handle->imgparam = imgparam;
     open_device (handle);
     init_device (handle);
     start_capturing (handle);
     /* Allocate Framebuffer */
-    switch (format) {
+    switch (handle->imgparam.img_fmt) {
     case V4L2W_IMGFORMAT_GREY:
-        outframesize = width * height;
+        outframesize = handle->imgparam.width * handle->imgparam.height;
         break;
     case V4L2W_IMGFORMAT_BGR24:
-        outframesize = width * height * 3;
+        outframesize = handle->imgparam.width * handle->imgparam.height * 3;
         break;
     }
     handle->outimg = malloc(outframesize);
     return (V4L2WHandler_t *)handle;
 }
 
-void * V4L2W_capture(V4L2WHandler_t * handle)
+V4L2WHandler_t * V4L2W_initialize(const char * device_name0, int width, int height, int fps, int output_format, int capture_format)
+{
+    struct V4L2W_IMGPARAM imgparam;
+    imgparam.width = width;
+    imgparam.height = height;
+    imgparam.fps = fps;
+    imgparam.img_fmt = output_format;
+    imgparam.pix_fmt = capture_format;
+
+    return V4L2W_init_w_param(device_name0, imgparam);
+}
+
+void V4L2W_select(V4L2WHandler_t * handle)
 {
     fd_set fds;
     struct timeval tv;
@@ -926,10 +1057,28 @@ RETRY:
         fprintf (stderr, "select timeout\n");
         exit (EXIT_FAILURE);
     }
+}
+
+void * V4L2W_capture(V4L2WHandler_t * handle)
+{
+    V4L2W_select(handle);
 
     read_frame(handle);
+    // unsigned char * data = malloc(handle->imgparam.width * handle->imgparam.height * 3);
+    // int size = read_stream(handle, data, handle->imgparam.width * handle->imgparam.height * 3);
+    // printf("%d\n", size);
+    // process_image(handle, data, size);
     
     return handle->outimg;
+}
+
+int V4L2W_capture_rawstream(V4L2WHandler_t * handle, unsigned char * data, int size)
+{
+    V4L2W_select(handle);
+
+    size = read_stream(handle, data, size);
+    
+    return size;
 }
 
 void V4L2W_finalize(V4L2WHandler_t * handle)

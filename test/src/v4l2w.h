@@ -10,15 +10,26 @@ extern "C"
 
 #include <linux/videodev2.h>
 
+enum V4L2W_IMGFORMAT {
+    V4L2W_IMGFORMAT_GREY,
+    V4L2W_IMGFORMAT_BGR24,
+    V4L2W_IMGFORMAT_MJPEG,
+    V4L2W_IMGFORMAT_H264
+};
+
 struct V4L2W_HANDLER;
 typedef struct V4L2W_HANDLER V4L2WHandler_t;
 
-enum V4L2W_IMGFORMAT {
-    V4L2W_IMGFORMAT_GREY,
-    V4L2W_IMGFORMAT_BGR24
+struct V4L2W_IMGPARAM {
+	int width;
+	int height;
+	int pix_fmt;
+	int img_fmt;
+	int fps;
 };
 
-V4L2WHandler_t * V4L2W_initialize(const char * device_name0, int width, int height, int fps, int format);
+V4L2WHandler_t * V4L2W_initialize(const char * device_name0, int width, int height, int fps, int output_format, int capture_format);
+V4L2WHandler_t * V4L2W_init_w_param(const char * device_name0, struct V4L2W_IMGPARAM imgparam);
 void * V4L2W_capture(V4L2WHandler_t * handle);
 void V4L2W_finalize(V4L2WHandler_t * handle);
 int V4L2W_getctrl(V4L2WHandler_t * handle, int type);
