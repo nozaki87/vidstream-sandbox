@@ -21,25 +21,7 @@ ENDMACRO(ADD_BINOBJ_TARGET)
 # Sources
 set(srcs 
   # main
-  src/stereo_eye_tracker.cpp
-  src/face_tracker.cpp
-  src/eye_tracker.cpp
-  src/point_tracker.cpp
   src/utils.cpp
-  # eye detection
-  src/unhogpd/leye_unhog_model.c
-  src/unhogpd/lmou_unhog_model.c
-  src/unhogpd/lnos_unhog_model.c
-  src/unhogpd/rceyeo_unhog_model.c
-  src/unhogpd/reye_unhog_model.c
-  src/unhogpd/rmou_unhog_model.c
-  src/unhogpd/rnos_unhog_model.c
-  src/unhogpd/unhog_operator.c
-  src/unhogpd/unhogpd.c
-  # calibration
-  src/calib/calibfunctions.cpp
-  src/calib/calibrator.cpp
-  src/calib/stereo_calib.cpp
   )
 
 
@@ -47,8 +29,6 @@ set(srcs
 include_directories(
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/unhogpd"
-  "${CMAKE_CURRENT_SOURCE_DIR}/src/calib"
   )
 
 add_definitions(-DFOOBAR)
