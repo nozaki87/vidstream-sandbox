@@ -17,7 +17,7 @@ public:
         mV4L2WImgParam.height = 1080;
         mV4L2WImgParam.fps = 30;
         mV4L2WImgParam.img_fmt = V4L2W_IMGFORMAT_BGR24;
-        mV4L2WImgParam.pix_fmt = V4L2_PIX_FMT_MJPEG;
+        mV4L2WImgParam.pix_fmt = V4L2_PIX_FMT_H264;
         mV4l2w = NULL;
     }
     V4L2C(int dev) {
@@ -25,7 +25,7 @@ public:
         mV4L2WImgParam.height = 1080;
         mV4L2WImgParam.fps = 30;
         mV4L2WImgParam.img_fmt = V4L2W_IMGFORMAT_BGR24;
-        mV4L2WImgParam.pix_fmt = V4L2_PIX_FMT_MJPEG;
+        mV4L2WImgParam.pix_fmt = V4L2_PIX_FMT_H264;
         mV4l2w = NULL;
         open(dev);
     }
@@ -43,7 +43,8 @@ public:
         if (mV4l2w == NULL) {
             mV4l2w = V4L2W_init_w_param(mDevname, mV4L2WImgParam);
         }
-        image = cv::Mat(mV4L2WImgParam.height, mV4L2WImgParam.width, CV_8UC3, V4L2W_capture(mV4l2w));
+        V4L2W_output_stream(mV4l2w, 1);
+        // image = cv::Mat(mV4L2WImgParam.height, mV4L2WImgParam.width, CV_8UC3, V4L2W_capture(mV4l2w));
     }
     // int read_stream(unsigned char * data, int size) {
     //     if (mV4l2w == NULL) {

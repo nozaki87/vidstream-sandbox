@@ -38,7 +38,7 @@ int main(int argc, char ** argv)
 
     while (1) {
         VC.read(inputimage);
-        cv::imshow("Input Image", inputimage);
+        // cv::imshow("Input Image", inputimage);
         if (check_break()) break;
     }
 

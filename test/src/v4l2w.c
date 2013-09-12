@@ -55,13 +55,14 @@ struct V4L2W_HANDLER {
     struct buffer *  buffers;
     unsigned int     n_buffers;
     char             dev_name_tmp[512];
-    unsigned char *  outimg;
-    // int              outimg_format;
-    // unsigned long    capture_format;
-    // int              cap_width;
-    // int              cap_height;
-    // int              cap_fps;
+    // image param
     struct V4L2W_IMGPARAM imgparam;
+    // image output
+    unsigned char *  outimg;
+    // file descriptor output
+    int outputfd;
+    // data size of current frame.
+    int bytes_in_frame;
 };
 
 /**********************************
@@ -166,7 +167,7 @@ xioctl                          (int                    fd,
         return r;
 }
 
-static void
+static int 
 process_image                   (V4L2WHandler_t * handle, const void *           p, int size)
 {
     switch (handle->imgparam.img_fmt) {
@@ -195,10 +196,18 @@ process_image                   (V4L2WHandler_t * handle, const void *          
         }
         break;
     }
+    return size;
+}
+
+static int 
+output2fd (V4L2WHandler_t * handle, const void * p, int size)
+{
+    write(handle->outputfd, p, size);
+    return size;
 }
 
 static int
-read_stream (V4L2WHandler_t * handle, unsigned char * data, int size)
+read_frame (V4L2WHandler_t * handle, int (*process_frame)(V4L2WHandler_t *, const void *, int))
 {
         struct v4l2_buffer buf;
         unsigned int i;
@@ -219,9 +228,8 @@ read_stream (V4L2WHandler_t * handle, unsigned char * data, int size)
                                 errno_exit ("read");
                         }
                 }
-                memcpy(data, handle->buffers[0].start, buf.bytesused);
-                size = buf.bytesused;
-                // process_image (handle, handle->buffers[0].start, handle->buffers[0].length);
+
+                process_frame (handle, handle->buffers[0].start, buf.bytesused);
 
                 break;
 
@@ -248,11 +256,8 @@ read_stream (V4L2WHandler_t * handle, unsigned char * data, int size)
 
                 assert (buf.index < handle->n_buffers);
 
-                memcpy(data, handle->buffers[buf.index].start, buf.bytesused);
-                size = buf.bytesused;
-
-                // size = handle->buffers[buf.index].length;
-                // process_image (handle, handle->buffers[buf.index].start, handle->buffers[buf.index].length);
+                process_frame (handle, handle->buffers[buf.index].start, buf.bytesused);
+                // fprintf(stderr, "%d\n", buf.bytesused);
 
                 if (-1 == xioctl (handle->fd, VIDIOC_QBUF, &buf))
                         errno_exit ("VIDIOC_QBUF");
@@ -287,106 +292,7 @@ read_stream (V4L2WHandler_t * handle, unsigned char * data, int size)
 
                 assert (i < handle->n_buffers);
 
-                memcpy(data, (void *) buf.m.userptr, buf.bytesused);
-                size = buf.bytesused;
-                // process_image (handle, (void *) buf.m.userptr, buf.length);
-
-                if (-1 == xioctl (handle->fd, VIDIOC_QBUF, &buf))
-                        errno_exit ("VIDIOC_QBUF");
-
-                break;
-        }
-
-        return size;
-}
-
-static int
-read_frame                      (V4L2WHandler_t * handle)
-{
-        struct v4l2_buffer buf;
-        unsigned int i;
-
-        switch (handle->io) {
-        case IO_METHOD_READ:
-                if (-1 == read (handle->fd, handle->buffers[0].start, handle->buffers[0].length)) {
-                        switch (errno) {
-                        case EAGAIN:
-                                return 0;
-
-                        case EIO:
-                                /* Could ignore EIO, see spec. */
-
-                                /* fall through */
-
-                        default:
-                                errno_exit ("read");
-                        }
-                }
-
-                process_image (handle, handle->buffers[0].start, buf.bytesused);
-
-                break;
-
-        case IO_METHOD_MMAP:
-                CLEAR (buf);
-
-                buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                buf.memory = V4L2_MEMORY_MMAP;
-
-                if (-1 == xioctl (handle->fd, VIDIOC_DQBUF, &buf)) {
-                        switch (errno) {
-                        case EAGAIN:
-                                return 0;
-
-                        case EIO:
-                                /* Could ignore EIO, see spec. */
-
-                                /* fall through */
-
-                        default:
-                                errno_exit ("VIDIOC_DQBUF");
-                        }
-                }
-
-                assert (buf.index < handle->n_buffers);
-
-                process_image (handle, handle->buffers[buf.index].start, buf.bytesused);
-                printf("%d\n", buf.bytesused);
-
-                if (-1 == xioctl (handle->fd, VIDIOC_QBUF, &buf))
-                        errno_exit ("VIDIOC_QBUF");
-
-                break;
-
-        case IO_METHOD_USERPTR:
-                CLEAR (buf);
-
-                buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                buf.memory = V4L2_MEMORY_USERPTR;
-
-                if (-1 == xioctl (handle->fd, VIDIOC_DQBUF, &buf)) {
-                        switch (errno) {
-                        case EAGAIN:
-                                return 0;
-
-                        case EIO:
-                                /* Could ignore EIO, see spec. */
-
-                                /* fall through */
-
-                        default:
-                                errno_exit ("VIDIOC_DQBUF");
-                        }
-                }
-
-                for (i = 0; i < handle->n_buffers; ++i)
-                        if (buf.m.userptr == (unsigned long) handle->buffers[i].start
-                            && buf.length == handle->buffers[i].length)
-                                break;
-
-                assert (i < handle->n_buffers);
-
-                process_image (handle, (void *) buf.m.userptr, buf.bytesused);
+                process_frame (handle, (void *) buf.m.userptr, buf.bytesused);
 
                 if (-1 == xioctl (handle->fd, VIDIOC_QBUF, &buf))
                         errno_exit ("VIDIOC_QBUF");
@@ -1063,7 +969,7 @@ void * V4L2W_capture(V4L2WHandler_t * handle)
 {
     V4L2W_select(handle);
 
-    read_frame(handle);
+    read_frame(handle, process_image);
     // unsigned char * data = malloc(handle->imgparam.width * handle->imgparam.height * 3);
     // int size = read_stream(handle, data, handle->imgparam.width * handle->imgparam.height * 3);
     // printf("%d\n", size);
@@ -1072,13 +978,15 @@ void * V4L2W_capture(V4L2WHandler_t * handle)
     return handle->outimg;
 }
 
-int V4L2W_capture_rawstream(V4L2WHandler_t * handle, unsigned char * data, int size)
+int V4L2W_output_stream(V4L2WHandler_t * handle, int fd)
 {
     V4L2W_select(handle);
 
-    size = read_stream(handle, data, size);
+    handle->outputfd = fd;
+    read_frame(handle, output2fd);
+    // size = read_stream(handle, data, size);
     
-    return size;
+    return handle->bytes_in_frame;
 }
 
 void V4L2W_finalize(V4L2WHandler_t * handle)
