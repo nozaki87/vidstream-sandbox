@@ -13,6 +13,9 @@ public:
     // int mWidth;
     // int mHeight;
     V4L2C() {
+        /* mV4L2WImgParam.width = 640; */
+        /* mV4L2WImgParam.height = 480; */
+        /* mV4L2WImgParam.fps = 10; */
         mV4L2WImgParam.width = 1920;
         mV4L2WImgParam.height = 1080;
         mV4L2WImgParam.fps = 30;
@@ -21,9 +24,12 @@ public:
         mV4l2w = NULL;
     }
     V4L2C(int dev) {
+        /* mV4L2WImgParam.width = 640; */
+        /* mV4L2WImgParam.height = 480; */
+        /* mV4L2WImgParam.fps = 10; */
         mV4L2WImgParam.width = 1920;
         mV4L2WImgParam.height = 1080;
-        mV4L2WImgParam.fps = 30;
+        mV4L2WImgParam.fps = 60;
         mV4L2WImgParam.img_fmt = V4L2W_IMGFORMAT_BGR24;
         mV4L2WImgParam.pix_fmt = V4L2_PIX_FMT_H264;
         mV4l2w = NULL;
