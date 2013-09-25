@@ -13,6 +13,8 @@ UDP
 gst-launch -v -e filesrc location=camera.h264 ! h264parse ! mpegtsmux ! rtpmp2tpay ! udpsink  host=127.0.0.1 port=4000
 gst-launch -v udpsrc port=4000 caps='application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264' ! rtpmp2tdepay ! mpegtsdemux ! queue ! ffdec_h264 !  ffmpegcolorspace ! deinterlace ! xvimagesink sync=false
 
+gst-launch-1.0 -v -e filesrc location=camera.h264 ! h264parse ! mpegtsmux ! rtpmp2tpay ! udpsink  host=127.0.0.1 port=4000
+gst-launch-1.0 -v udpsrc port=4000 caps='application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264' ! rtpmp2tdepay ! tsdemux ! h264parse ! avdec_h264 ! videoconvert ! videoscale ! ximagesink sync=false
 
 
 ./test/sender03 | gst-launch -v -e filesrc location=/dev/fd/0 ! h264parse ! ffdec_h264 ! ffmpegcolorspace ! deinterlace ! xvimagesink
